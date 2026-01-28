@@ -95,26 +95,28 @@
         </div>
 
         {{-- LIST PER TAHUN --}}
-        <div class="arsip-list">
-            @php
-                $colors = ['#ff4d4f','#1890ff','#faad14','#52c41a','#eb2f96','#722ed1','#13c2c2'];
-                $i = 0;
-            @endphp
+<div class="arsip-list">
+    <div class="arsip-list-scroll">
+        @php
+            $colors = ['#ff4d4f','#1890ff','#faad14','#52c41a','#eb2f96','#722ed1','#13c2c2'];
+            $i = 0;
+        @endphp
 
-            @foreach($arsipPerTahun as $tahun => $jumlah)
-                <div class="arsip-item">
-                    <span class="dot" style="background: {{ $colors[$i % count($colors)] }}"></span>
-                    <span class="label">Arsip {{ $tahun }}</span>
-                    <span class="value">{{ number_format($jumlah,0,',','.') }}</span>
-                </div>
-                @php $i++; @endphp
-            @endforeach
-
-            <div class="total-arsip">
-                <small>TOTAL ARSIP</small>
-                <strong>{{ number_format($totalArsip,0,',','.') }}</strong>
+        @foreach($arsipPerTahun as $tahun => $jumlah)
+            <div class="arsip-item">
+                <span class="dot" style="background: {{ $colors[$i % count($colors)] }}"></span>
+                <span class="label">Arsip {{ $tahun }}</span>
+                <span class="value">{{ number_format($jumlah,0,',','.') }}</span>
             </div>
-        </div>
+            @php $i++; @endphp
+        @endforeach
+    </div>
+
+    <div class="total-arsip">
+        <small>TOTAL ARSIP</small>
+        <strong>{{ number_format($totalArsip,0,',','.') }}</strong>
+    </div>
+</div>        
     </div>
 </section>
 
@@ -124,22 +126,21 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
     const canvas = document.getElementById('arsipChart');
     if (!canvas) return;
 
-    // data dari backend
     const arsipPerTahun = @json($arsipPerTahun);
 
     const labels = Object.keys(arsipPerTahun);
     const dataValues = Object.values(arsipPerTahun);
 
-    // hitung lebar chart biar bisa scroll
-    const minWidthPerYear = 140;
-    const dynamicWidth = labels.length * minWidthPerYear;
+    // Lebar chart: makin banyak tahun makin lebar (biar bisa scroll)
+    const perLabelWidth = 140;
+    const minWidth = 900;
+    const dynamicWidth = Math.max(minWidth, labels.length * perLabelWidth);
 
-    document.querySelector('.chart-container').style.width =
-        Math.max(dynamicWidth, 900) + 'px';
+    const container = document.querySelector('.chart-container');
+    if (container) container.style.width = dynamicWidth + 'px';
 
     const ctx = canvas.getContext('2d');
 
@@ -166,21 +167,17 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             scales: {
                 x: {
-                    ticks: {
-                        autoSkip: false
-                    }
+                    ticks: { autoSkip: false }
                 },
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: value => value.toLocaleString('id-ID')
+                        callback: (value) => Number(value).toLocaleString('id-ID')
                     }
                 }
             },
             plugins: {
-                legend: {
-                    display: false
-                }
+                legend: { display: false }
             }
         }
     });

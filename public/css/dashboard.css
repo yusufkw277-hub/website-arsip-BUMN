@@ -1,5 +1,5 @@
 html, body {
-    overflow-x: hidden;
+    overflow-x: auto; 
 }
 
 * {
@@ -244,24 +244,51 @@ html, body {
     align-items: stretch;
 }
 
-.chart-container {
+/* WRAPPER yang pegang scrollbar */
+.chart-scroll {
     flex: 2;
     background: #fff;
-    padding: 20px;
-    overflow-x: auto;
     border: 1px solid #eaeaea;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+    border-radius: 8px;
 }
 
+/* Ini yang dibuat lebar supaya bisa di-scroll */
+.chart-container {
+    height: 380px;
+    min-width: 900px;   /* default minimal */
+    padding: 20px;
+}
+
+/* Canvas ngikut ukuran container */
 .chart-container canvas {
-    min-width: 700px;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .arsip-list {
     flex: 1;
     border-left: 1px solid #eaeaea;
     padding-left: 20px;
-    max-height: 360px;
+
+    height: 380px;              /* sama dengan chart */
+    display: flex;
+    flex-direction: column;
+}
+
+.arsip-list-scroll {
     overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* INI KUNCI SUPAYA NEMPEL BAWAH */
+.total-arsip {
+    margin-top: auto;           /* dorong ke paling bawah */
+    text-align: right;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
 }
 
 .arsip-item {
@@ -299,15 +326,4 @@ html, body {
 
 .total-arsip strong {
     font-size: 18px;
-}
-
-.chart-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 10px;
-}
-
-.chart-container {
-    min-width: 900px; /* default */
-    height: 380px;
 }
