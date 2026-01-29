@@ -15,7 +15,9 @@
         Swal.fire({
             icon: 'error',
             title: 'Gagal',
-            text: @json(session('success')),
+            // text: @json(session('success')),
+            text: @json(session('error')),
+
             showConfirmButton: true
         });
     </script>

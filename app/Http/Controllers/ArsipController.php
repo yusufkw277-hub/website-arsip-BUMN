@@ -107,7 +107,8 @@ class ArsipController extends Controller
     public function update(Request $request, $id) {
         try {
 
-            $obj = Arsip::find($id);
+            // $obj = Arsip::find($id);
+            $obj = Arsip::findOrFail($id);
             $obj->nama_perusahaan = $request->nama_perusahaan;
             $obj->uraian_informasi_berkas = $request->uraian_informasi_berkas;
             $obj->unit_pengolah = $request->unit_pengolah;
@@ -116,7 +117,7 @@ class ArsipController extends Controller
             $obj->lokasi_simpan_lemari = $request->lokasi_simpan_lemari;
             $obj->lokasi_simpan_bok = $request->lokasi_simpan_bok;
             $obj->lokasi_simpan_folder = $request->lokasi_simpan_folder;
-            $obj->lokasi_simpan_no_defenitif = $request->lokasi_simpan_no_defenitif;
+            $obj->lokasi_simpan_no_definitif = $request->lokasi_simpan_no_definitif;
 
             $obj->nf = $request->nf;
             $obj->nu = $request->nu;
@@ -157,8 +158,12 @@ class ArsipController extends Controller
             $obj->id_bok = $request->id_bok;
             $obj->no_item_urut = $request->no_item_urut;
             $obj->no_item_str = $request->no_item_str;
+            // $obj->primary_key_final = $request->primary_key_final;
+
     
-            $obj->update();
+            // $obj->update();
+            $obj->save();
+
             $primaryKey = $obj->primary_key_final;
     
             return redirect()->route('arsip.data')->with('success', 'Berhasil edit arsip : ' . $primaryKey);

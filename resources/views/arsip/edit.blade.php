@@ -57,8 +57,8 @@
 
                 <fieldset class="col-12 col-sm-3">
                     <legend class="fs-6">Lokasi Simpan No Defenitif</legend>
-                    <input type="text" name="lokasi_simpan_no_defenitif" class="form-control"
-                        value="{{ $data->lokasi_simpan_no_defenitif }}">
+                    <input type="text" name="lokasi_simpan_no_definitif" class="form-control"
+                        value="{{ $data->lokasi_simpan_no_definitif }}">
                 </fieldset>
 
                 <fieldset class="col-12 col-sm-3">
@@ -242,8 +242,8 @@
 
                 <fieldset class="col-12 col-sm-3">
                     <legend class="fs-6">Global Box Int</legend>
-                    <input type="text" name="global_box_int" class="form-control"
-                        value="{{ $data->global_box_int }}">
+                    <input type="text" name="global_bok_int" class="form-control"
+                        value="{{ $data->global_bok_int }}">
                 </fieldset>
 
                 <fieldset class="col-12 col-sm-3">
