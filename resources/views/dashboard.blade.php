@@ -95,31 +95,117 @@
         </div>
 
         {{-- LIST PER TAHUN --}}
-<div class="arsip-list">
-    <div class="arsip-list-scroll">
-        @php
-            $colors = ['#ff4d4f','#1890ff','#faad14','#52c41a','#eb2f96','#722ed1','#13c2c2'];
-            $i = 0;
-        @endphp
+        <div class="arsip-list">
+            <div class="arsip-list-scroll">
+                @php
+                    $colors = ['#ff4d4f','#1890ff','#faad14','#52c41a','#eb2f96','#722ed1','#13c2c2'];
+                    $i = 0;
+                @endphp
 
-        @foreach($arsipPerTahun as $tahun => $jumlah)
-            <div class="arsip-item">
-                <span class="dot" style="background: {{ $colors[$i % count($colors)] }}"></span>
-                <span class="label">Arsip {{ $tahun }}</span>
-                <span class="value">{{ number_format($jumlah,0,',','.') }}</span>
+                @foreach($arsipPerTahun as $tahun => $jumlah)
+                    <div class="arsip-item">
+                        <span class="dot" style="background: {{ $colors[$i % count($colors)] }}"></span>
+                        <span class="label">Arsip {{ $tahun }}</span>
+                        <span class="value">{{ number_format($jumlah,0,',','.') }}</span>
+                    </div>
+                    @php $i++; @endphp
+                @endforeach
             </div>
-            @php $i++; @endphp
-        @endforeach
+
+            <div class="total-arsip">
+                <small>TOTAL ARSIP</small>
+                <strong>{{ number_format($totalArsip,0,',','.') }}</strong>
+            </div>
+        </div>
     </div>
 
-    <div class="total-arsip">
-        <small>TOTAL ARSIP</small>
-        <strong>{{ number_format($totalArsip,0,',','.') }}</strong>
-    </div>
-</div>        
+    {{-- ✅ INSIGHT DI BAWAH CHART (bukan di dalam flex row) --}}
+    <div class="statistik-insight">
+        <div class="insight-item">
+            <span class="insight-icon">📈</span>
+            <span id="insight-terbanyak"></span>
+        </div>
+
+        <div class="insight-item">
+            <span class="insight-icon">📉</span>
+            <span id="insight-terendah"></span>
+        </div>
     </div>
 </section>
 
+{{-- ================= PEMISAH SECTION ================= --}}
+<div class="section-divider"></div>
+
+{{-- ================= PERATURAN & RETENSI ================= --}}
+<section class="retensi-section">
+    <h2 class="retensi-title">Peraturan dan Jadwal Retensi</h2>
+
+    <div class="retensi-cards">
+        {{-- CARD PERMEN --}}
+        <div class="retensi-card">
+            <small class="retensi-subtitle">
+                Peraturan Menteri Badan Usaha Milik Negara Nomor PER-06/MBU/10/2019
+            </small>
+
+            <h3 class="retensi-heading">
+                PERUBAHAN ATAS PERATURAN MENTERI BADAN USAHA MILIK NEGARA
+                NOMOR PER-04/MBU/03/2018 TENTANG PENYELENGGARAAN ARSIP DINAMIS
+                DI LINGKUNGAN KEMENTERIAN BADAN USAHA MILIK NEGARA
+            </h3>
+
+            <hr>
+
+            <a href="{{ asset('pdf/permen-bumn.pdf') }}" target="_blank" class="retensi-pdf">
+                <img src="{{ asset('images/icon-pdf.png') }}" alt="PDF">
+                PER-06-MBU-2019 (penyelenggaraan arsip dinamis)
+            </a>
+        </div>
+
+        {{-- CARD JRA --}}
+        <div class="retensi-card">
+            <small class="retensi-subtitle">
+                Jadwal Retensi Arsip
+            </small>
+
+            <h3 class="retensi-heading">
+                PERATURAN KEPALA ARSIP NASIONAL REPUBLIK INDONESIA
+                NOMOR 12 TAHUN 2009 TENTANG JADWAL RETENSI ARSIP
+            </h3>
+
+            <hr>
+
+            <a href="{{ asset('pdf/jra.pdf') }}" target="_blank" class="retensi-pdf">
+                <img src="{{ asset('images/icon-pdf.png') }}" alt="PDF">
+                Jadwal retensi arsip JRA
+            </a>
+        </div>
+    </div>
+</section>
+
+{{-- ================= FOOTER / PENUTUP ================= --}}
+<footer class="footer-in-content">
+    <div class="footer-inner">
+        <div class="footer-left">
+            <img src="{{ asset('images/logo-bumn-garuda.png') }}" class="footer-logo" alt="BUMN">
+
+            <div class="footer-text">
+                <div class="footer-title">
+                    BADAN PENGATURAN<br>
+                    BADAN USAHA MILIK NEGARA
+                </div>
+                <div class="footer-address">
+                    Jl. Medan Merdeka Selatan No.13<br>
+                    Jakarta 10110 Indonesia
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔥 PINDAH KE SINI -->
+    <div class="footer-pattern">
+        <img src="{{ asset('images/logo-bumn-pattern.png') }}" alt="pattern">
+    </div>
+</footer>
 </div>
 @endsection
 
@@ -129,6 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById('arsipChart');
     if (!canvas) return;
 
+    // Data dari backend (sekali saja)
     const arsipPerTahun = @json($arsipPerTahun);
 
     const labels = Object.keys(arsipPerTahun);
@@ -142,6 +229,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = document.querySelector('.chart-container');
     if (container) container.style.width = dynamicWidth + 'px';
 
+    // =======================
+    // INSIGHT REAL-TIME
+    // =======================
+    const entries = Object.entries(arsipPerTahun);
+
+    if (entries.length > 0) {
+        const max = entries.reduce((a, b) => a[1] > b[1] ? a : b);
+        const min = entries.reduce((a, b) => a[1] < b[1] ? a : b);
+
+        const elMax = document.getElementById('insight-terbanyak');
+        const elMin = document.getElementById('insight-terendah');
+
+        if (elMax) elMax.innerText = `Arsip terbanyak tercatat pada tahun ${max[0]}`;
+        if (elMin) elMin.innerText = `Penurunan arsip terjadi pada tahun ${min[0]}`;
+    }
+
+    // =======================
+    // CHART.JS
+    // =======================
     const ctx = canvas.getContext('2d');
 
     new Chart(ctx, {
@@ -166,9 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 intersect: false
             },
             scales: {
-                x: {
-                    ticks: { autoSkip: false }
-                },
+                x: { ticks: { autoSkip: false } },
                 y: {
                     beginAtZero: true,
                     ticks: {
