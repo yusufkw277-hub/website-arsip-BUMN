@@ -106,7 +106,7 @@
                     <div class="arsip-item">
                         <span class="dot" style="background: {{ $colors[$i % count($colors)] }}"></span>
                         <span class="label">Arsip {{ $tahun }}</span>
-                        <span class="value">{{ number_format($jumlah,0,',','.') }}</span>
+                        <span class="value countup" data-number="{{ $jumlah }}">0</span>
                     </div>
                     @php $i++; @endphp
                 @endforeach
@@ -114,8 +114,8 @@
 
             <div class="total-arsip">
                 <small>TOTAL ARSIP</small>
-                <strong>{{ number_format($totalArsip,0,',','.') }}</strong>
-            </div>
+                <strong id="totalArsipNumber">{{ number_format($totalArsip,0,',','.') }}</strong>
+            </div>            
         </div>
     </div>
 
@@ -212,28 +212,26 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const statistikSection = document.querySelector('.statistik-arsip');
     const canvas = document.getElementById('arsipChart');
-    if (!canvas) return;
+    if (!statistikSection || !canvas) return;
 
-    // Data dari backend (sekali saja)
+    // Data dari backend
     const arsipPerTahun = @json($arsipPerTahun);
-
     const labels = Object.keys(arsipPerTahun);
     const dataValues = Object.values(arsipPerTahun);
 
-    // Lebar chart: makin banyak tahun makin lebar (biar bisa scroll)
+    // Lebar chart biar bisa scroll
     const perLabelWidth = 140;
     const minWidth = 900;
     const dynamicWidth = Math.max(minWidth, labels.length * perLabelWidth);
-
     const container = document.querySelector('.chart-container');
     if (container) container.style.width = dynamicWidth + 'px';
 
     // =======================
-    // INSIGHT REAL-TIME
+    // INSIGHT (tetap)
     // =======================
     const entries = Object.entries(arsipPerTahun);
-
     if (entries.length > 0) {
         const max = entries.reduce((a, b) => a[1] > b[1] ? a : b);
         const min = entries.reduce((a, b) => a[1] < b[1] ? a : b);
@@ -246,45 +244,102 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =======================
-    // CHART.JS
+    // COUNT UP (TOTAL)
+    // =======================
+    function animateCount(el, endValue, duration = 1200) {
+        if (!el) return;
+
+        const startValue = 0;
+        const startTime = performance.now();
+
+        function step(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const current = Math.floor(startValue + (endValue - startValue) * progress);
+            el.textContent = current.toLocaleString('id-ID');
+
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    // Ambil total arsip angka asli dari backend (lebih aman)
+    const totalArsipValue = {{ (int) $totalArsip }};
+    const totalEl = document.getElementById('totalArsipNumber');
+
+    // =======================
+    // CHART.JS (dibuat sekali)
     // =======================
     const ctx = canvas.getContext('2d');
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: dataValues,
-                borderColor: '#1890ff',
-                backgroundColor: 'rgba(24,144,255,0.15)',
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
+    let chartInstance = null;
+
+    function buildChart() {
+        if (chartInstance) return; // jangan dobel
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataValues,
+                    borderColor: '#1890ff',
+                    backgroundColor: 'rgba(24,144,255,0.15)',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                x: { ticks: { autoSkip: false } },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: (value) => Number(value).toLocaleString('id-ID')
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { ticks: { autoSkip: false } },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: (v) => Number(v).toLocaleString('id-ID') }
                     }
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                animation: {
+                    duration: 1400,
+                    easing: 'easeOutQuart'
                 }
-            },
-            plugins: {
-                legend: { display: false }
             }
-        }
+        });
+    }
+
+    // =======================
+    // TRIGGER SAAT MASUK LAYAR
+    // =======================
+    let hasPlayed = false;
+
+    const observer = new IntersectionObserver((entriesObs) => {
+        entriesObs.forEach((entry) => {
+            if (entry.isIntersecting && !hasPlayed) {
+                hasPlayed = true;
+
+                // 1) count up total
+                animateCount(totalEl, totalArsipValue, 1200);
+
+                // animasi angka per tahun kanan
+        document.querySelectorAll('.countup').forEach(el => {
+        const end = Number(el.dataset.number || 0);
+        animateCount(el, end, 1000);
     });
+
+                // 2) build chart (akan animasi dari chart.js)
+                buildChart();
+
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.35 });
+
+    observer.observe(statistikSection);
 });
 </script>
 @endpush
